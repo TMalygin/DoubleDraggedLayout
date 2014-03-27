@@ -60,6 +60,29 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 
 	}
 
+	private void startAnimation(float fromY, float toY, final View v) {
+		Animation anim = new TranslateAnimation(0, 0, fromY, toY);
+		anim.setDuration(700);
+		anim.setAnimationListener(new AnimationListener() {
+
+			@Override
+			public void onAnimationStart(Animation animation) {
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+			}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				v.clearAnimation();
+				mState = mNextState;
+				requestLayout();
+			}
+		});
+		v.startAnimation(anim);
+	}
+
 	/**
 	 * 
 	 * @param left
@@ -98,36 +121,6 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 
 		mBottom.openedDiffY = mBottom.height - topHeight;
 
-	}
-
-	/**
-	 * 
-	 * @param fromY
-	 * @param toY
-	 * @param v
-	 */
-	private void startAnimation(float fromY, float toY, final View v) {
-		Animation anim = new TranslateAnimation(0, 0, fromY, toY);
-		anim.setDuration(700);
-		// fixed: blink after animation
-		anim.setAnimationListener(new AnimationListener() {
-
-			@Override
-			public void onAnimationStart(Animation animation) {
-			}
-
-			@Override
-			public void onAnimationRepeat(Animation animation) {
-			}
-
-			@Override
-			public void onAnimationEnd(Animation animation) {
-				v.clearAnimation();
-				mState = mNextState;
-				requestLayout();
-			}
-		});
-		v.startAnimation(anim);
 	}
 
 	@Override
@@ -187,19 +180,25 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 		case STATE_TOP_OPENED:
 			mState = STATE_ANIMATION;
 
+
 			startAnimation(0, mTop.openedDiffY, mTop.view);
 			startAnimation(0, mTop.openedDiffY, mCenter.view);
 			startAnimation(0, mTop.openedDiffY, mBottom.view);
 
+
 			break;
 		case STATE_BOTTOM_OPENED:
 			mState = STATE_ANIMATION;
+
 			startAnimation(0, -mBottom.openedDiffY, mBottom.view);
+
 			break;
 		case STATE_NORMAL:
 			if (mState == STATE_BOTTOM_OPENED) {
 				mState = STATE_ANIMATION;
+
 				startAnimation(0, mBottom.openedDiffY, mBottom.view);
+
 			} else {
 				mState = STATE_ANIMATION;
 
