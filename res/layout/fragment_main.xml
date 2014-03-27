@@ -1,0 +1,35 @@
+<com.example.doublepannellayout.DoubleDraggedPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.doublepannellayout.MainActivity$PlaceholderFragment" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="66dp"
+        android:background="@drawable/ic_launcher"
+        android:gravity="center"
+        android:text="first"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/ic_launcher"
+        android:gravity="center"
+        android:text="second"
+        android:textColor="@android:color/white" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:background="@drawable/ic_launcher"
+        android:gravity="center"
+        android:text="third"
+        android:textColor="@android:color/white" />
+
+</com.example.doublepannellayout.DoubleDraggedPanelLayout>
