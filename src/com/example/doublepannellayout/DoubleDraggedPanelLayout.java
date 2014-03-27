@@ -2,14 +2,12 @@ package com.example.doublepannellayout;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.TouchDelegate;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationUtils;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 
 public class DoubleDraggedPanelLayout extends FrameLayout implements
 		AnimationListener {
@@ -22,9 +20,9 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 	private int mState;
 	private int mNextState;
 
-	private ImplViewContainer mTop;
-	private ImplViewContainer mCenter;
-	private ImplViewContainer mBottom;
+	private final ImplViewContainer mTop = new ImplViewContainer();
+	private final ImplViewContainer mCenter = new ImplViewContainer();
+	private final ImplViewContainer mBottom = new ImplViewContainer();
 
 	public DoubleDraggedPanelLayout(Context context) {
 		super(context);
@@ -50,28 +48,39 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 		int height = bottom - top;
 		int bottomSize = (int) (height * 0.2f);
 
-		mTop = new ImplViewContainer();
-		mTop.view = getChildAt(0);
-
 		int topHeight = mTop.view.getLayoutParams().height;
 		if (topHeight < 0) {
 			topHeight = bottomSize;
 		}
 
-		mTop.height = (int) (height - bottomSize);
-		mTop.normalTop = (int) -(mTop.height - topHeight);
-		mTop.normalBottom = (int) topHeight;
+		mTop.height = (height - bottomSize);
+		mTop.normalTop = -(mTop.height - topHeight);
+		mTop.normalBottom = topHeight;
 		mTop.openedDiffY = mTop.height - topHeight;
 
-		// animation for top
-		mTop.opened = new TranslateAnimation(0, 0, 0, mTop.openedDiffY);
-		mTop.opened.setDuration(700);
-		mTop.opened.setAnimationListener(this);
+	}
 
-		mTop.closed = new TranslateAnimation(0, 0, 0, -(mTop.openedDiffY));
-		mTop.closed.setDuration(700);
-		mTop.closed.setAnimationListener(this);
+	private void startAnimation(float fromY, float toY, final View v) {
+		Animation anim = new TranslateAnimation(0, 0, fromY, toY);
+		anim.setDuration(700);
+		anim.setAnimationListener(new AnimationListener() {
 
+			@Override
+			public void onAnimationStart(Animation animation) {
+			}
+
+			@Override
+			public void onAnimationRepeat(Animation animation) {
+			}
+
+			@Override
+			public void onAnimationEnd(Animation animation) {
+				v.clearAnimation();
+				mState = mNextState;
+				requestLayout();
+			}
+		});
+		v.startAnimation(anim);
 	}
 
 	/**
@@ -82,8 +91,6 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 	 * @param bottom
 	 */
 	private void initCenterView(int left, int top, int right, int bottom) {
-		mCenter = new ImplViewContainer();
-		mCenter.view = getChildAt(1);
 
 		mCenter.height = mBottom.normalTop - mTop.normalBottom;
 		mCenter.normalTop = mTop.normalBottom;
@@ -102,9 +109,6 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 		int height = bottom - top;
 		int bottomSize = (int) (height * 0.2f);
 
-		mBottom = new ImplViewContainer();
-		mBottom.view = getChildAt(2);
-
 		int topHeight = mBottom.view.getLayoutParams().height;
 		if (topHeight < 0) {
 			topHeight = bottomSize;
@@ -117,24 +121,21 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 
 		mBottom.openedDiffY = mTop.height - topHeight;
 
-		// animation for top
-		mBottom.opened = new TranslateAnimation(0, 0, 0, -mBottom.openedDiffY);
-		mBottom.opened.setDuration(700);
-		mBottom.opened.setAnimationListener(this);
-
-		mBottom.closed = new TranslateAnimation(0, 0, 0, mBottom.openedDiffY);
-		mBottom.closed.setDuration(700);
-		mBottom.closed.setAnimationListener(this);
-
 	}
 
 	@Override
 	protected void onLayout(boolean changed, int left, int top, int right,
 			int bottom) {
+		long startTime = System.currentTimeMillis();
 		if (getChildCount() != 3) {
 			throw new IllegalStateException(
 					"DraggedPanelLayout must have 3 children!");
 		}
+
+		mTop.view = getChildAt(0);
+		mCenter.view = getChildAt(1);
+		mBottom.view = getChildAt(2);
+
 		if (changed) {
 			initTopView(left, top, right, bottom);
 			initBottomView(left, top, right, bottom);
@@ -164,6 +165,7 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 					mBottom.normalBottom);
 			break;
 		}
+		Log.v("", "time " + (System.currentTimeMillis() - startTime));
 	}
 
 	public int getState() {
@@ -174,27 +176,29 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 		if (mState == STATE_ANIMATION || state == mState)
 			return;
 		mNextState = state;
-
 		switch (state) {
 		case STATE_TOP_OPENED:
 			mState = STATE_ANIMATION;
-			mTop.view.startAnimation(mTop.opened);
-			mCenter.view.startAnimation(mTop.opened);
-			mBottom.view.startAnimation(mTop.opened);
+
+			startAnimation(mTop.normalBottom, mTop.openedDiffY, mTop.view);
+			startAnimation(mCenter.normalTop, mTop.openedDiffY, mCenter.view);
+			startAnimation(mBottom.normalTop, mTop.openedDiffY, mBottom.view);
+
 			break;
 		case STATE_BOTTOM_OPENED:
 			mState = STATE_ANIMATION;
-			mBottom.view.startAnimation(mBottom.opened);
+			startAnimation(mBottom.normalTop, -mBottom.height, mBottom.view);
 			break;
 		case STATE_NORMAL:
 			if (mState == STATE_BOTTOM_OPENED) {
 				mState = STATE_ANIMATION;
-				mBottom.view.startAnimation(mBottom.closed);
+				startAnimation(mBottom.normalTop, mBottom.height, mBottom.view);
 			} else {
 				mState = STATE_ANIMATION;
-				mTop.view.startAnimation(mTop.closed);
-				mCenter.view.startAnimation(mTop.closed);
-				mBottom.view.startAnimation(mTop.closed);
+
+				startAnimation(0, -mTop.openedDiffY, mTop.view);
+				startAnimation(0, -mTop.openedDiffY, mCenter.view);
+				startAnimation(0, -mTop.openedDiffY, mBottom.view);
 			}
 			break;
 		}
@@ -207,9 +211,10 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 	@Override
 	public void onAnimationEnd(Animation animation) {
 		mState = mNextState;
-		mBottom.view.clearAnimation();
-		mTop.view.clearAnimation();
-		mCenter.view.clearAnimation();
+		getChildAt(0).clearAnimation();
+		getChildAt(1).clearAnimation();
+		getChildAt(2).clearAnimation();
+		animation.setAnimationListener(null);
 		requestLayout();
 	}
 
@@ -220,11 +225,7 @@ public class DoubleDraggedPanelLayout extends FrameLayout implements
 	private static class ImplViewContainer {
 		View view;
 
-		Animation opened;
-		Animation closed;
-
 		int height;
-
 		int normalTop, normalBottom;
 		int openedDiffY;
 
