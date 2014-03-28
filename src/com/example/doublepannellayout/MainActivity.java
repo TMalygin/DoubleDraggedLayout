@@ -77,9 +77,9 @@ public class MainActivity extends ActionBarActivity {
 					false);
 			mLayout = (DoubleDraggedPanelLayout) rootView
 					.findViewById(R.id.layout);
-			rootView.findViewById(R.id.textView1).setOnClickListener(this);
+			rootView.findViewById(R.id.button1).setOnClickListener(this);
 			rootView.findViewById(R.id.textView2).setOnClickListener(this);
-			rootView.findViewById(R.id.textView3).setOnClickListener(this);
+			rootView.findViewById(R.id.button2).setOnClickListener(this);
 			return rootView;
 		}
 
@@ -94,14 +94,18 @@ public class MainActivity extends ActionBarActivity {
 		@Override
 		public void onClick(View v) {
 			switch (v.getId()) {
-			case R.id.textView1:
+			case R.id.button1:
 				mLayout.switchState(DoubleDraggedPanelLayout.STATE_TOP_OPENED);
 				break;
 			case R.id.textView2:
 				mLayout.switchState(DoubleDraggedPanelLayout.STATE_NORMAL);
 				break;
-			case R.id.textView3:
-				mLayout.switchState(DoubleDraggedPanelLayout.STATE_BOTTOM_OPENED);
+			case R.id.button2:
+				if (mLayout.getState() == DoubleDraggedPanelLayout.STATE_NORMAL) {
+					mLayout.switchState(DoubleDraggedPanelLayout.STATE_BOTTOM_OPENED);
+				} else {
+					mLayout.switchState(DoubleDraggedPanelLayout.STATE_NORMAL);
+				}
 				break;
 			}
 		}
