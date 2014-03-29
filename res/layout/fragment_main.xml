@@ -1,4 +1,5 @@
-<com.example.doublepannellayout.DoubleDraggedPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<tm.soft.view.DoubleDraggedLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:attr="http://schemas.android.com/apk/res/tm.soft.doubledraggedlayout"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/layout"
     android:layout_width="match_parent"
@@ -6,21 +7,20 @@
     tools:context="com.example.doublepannellayout.MainActivity$PlaceholderFragment" >
 
     <RelativeLayout
+        android:id="@id/top_layout"
         android:layout_width="wrap_content"
-        android:layout_height="166dp" 
-        android:background="#0f0"
-        android:id="@+id/container1">
+        android:layout_height="166dp"
+        android:background="#0f0" >
 
-        <Button
+        <tm.soft.view.DraggedView
             android:id="@+id/button1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:text="Button" />
-        
+            />
     </RelativeLayout>
-   
+
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
@@ -30,20 +30,21 @@
         android:text="second"
         android:textColor="@android:color/white" />
 
-   <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent" 
-        android:background="#00f"
-        android:id="@+id/container1">
+    <RelativeLayout
+        android:id="@id/bottom_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#00f" >
 
-        <Button
+        <tm.soft.view.DraggedView
             android:id="@+id/button2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            attr:min_position="0dp"
+            attr:max_position="400dp"
+            android:background="@android:drawable/btn_default"
+            android:layout_width="60dp"
+            android:layout_height="20dp"
             android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:text="Button" />
-        
+            android:layout_centerHorizontal="true" />
     </RelativeLayout>
 
-</com.example.doublepannellayout.DoubleDraggedPanelLayout>
+</tm.soft.view.DoubleDraggedLayout>

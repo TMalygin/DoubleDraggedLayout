@@ -1,0 +1,6 @@
+<resources>
+
+    <item name="top_layout" type="id"/>
+    <item name="bottom_layout" type="id"/>
+
+</resources>

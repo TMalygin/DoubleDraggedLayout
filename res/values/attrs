@@ -1,0 +1,6 @@
+<resources>
+   <declare-styleable name="DraggedView">
+       <attr name="min_position" format="dimension" />
+       <attr name="max_position" format="dimension" />
+   </declare-styleable>
+</resources>

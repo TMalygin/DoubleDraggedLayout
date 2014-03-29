@@ -1,4 +1,4 @@
-package com.example.doublepannellayout;
+package tm.soft.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -12,7 +12,7 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.animation.TranslateAnimation;
 import android.widget.FrameLayout;
 
-public class DoubleDraggedPanelLayout extends FrameLayout {
+public class DoubleDraggedLayout extends FrameLayout {
 
 	public static final int STATE_NORMAL = 0;
 	public static final int STATE_TOP_OPENED = 1;
@@ -33,18 +33,19 @@ public class DoubleDraggedPanelLayout extends FrameLayout {
 	private int mSlop;
 	private float mTouchY;
 	private boolean mIsDragged = false;
+	
 
-	public DoubleDraggedPanelLayout(Context context) {
+	public DoubleDraggedLayout(Context context) {
 		super(context);
 		init(context);
 	}
 
-	public DoubleDraggedPanelLayout(Context context, AttributeSet attrs) {
+	public DoubleDraggedLayout(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init(context);
 	}
 
-	public DoubleDraggedPanelLayout(Context context, AttributeSet attrs,
+	public DoubleDraggedLayout(Context context, AttributeSet attrs,
 			int defStyle) {
 		super(context, attrs, defStyle);
 		init(context);

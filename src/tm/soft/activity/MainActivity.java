@@ -1,5 +1,7 @@
-package com.example.doublepannellayout;
+package tm.soft.activity;
 
+import tm.soft.doubledraggedlayout.R;
+import tm.soft.view.DoubleDraggedLayout;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -65,7 +67,7 @@ public class MainActivity extends ActionBarActivity {
 	public static class PlaceholderFragment extends Fragment implements
 			OnClickListener {
 
-		DoubleDraggedPanelLayout mLayout;
+		DoubleDraggedLayout mLayout;
 
 		public PlaceholderFragment() {
 		}
@@ -75,7 +77,7 @@ public class MainActivity extends ActionBarActivity {
 				Bundle savedInstanceState) {
 			View rootView = inflater.inflate(R.layout.fragment_main, container,
 					false);
-			mLayout = (DoubleDraggedPanelLayout) rootView
+			mLayout = (DoubleDraggedLayout) rootView
 					.findViewById(R.id.layout);
 			rootView.findViewById(R.id.button1).setOnClickListener(this);
 			rootView.findViewById(R.id.textView2).setOnClickListener(this);
@@ -84,8 +86,8 @@ public class MainActivity extends ActionBarActivity {
 		}
 
 		public boolean onBackPressed() {
-			if (mLayout.getState() != DoubleDraggedPanelLayout.STATE_NORMAL) {
-				mLayout.switchState(DoubleDraggedPanelLayout.STATE_NORMAL);
+			if (mLayout.getState() != DoubleDraggedLayout.STATE_NORMAL) {
+				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
 				return true;
 			}
 			return false;
@@ -95,16 +97,16 @@ public class MainActivity extends ActionBarActivity {
 		public void onClick(View v) {
 			switch (v.getId()) {
 			case R.id.button1:
-				mLayout.switchState(DoubleDraggedPanelLayout.STATE_TOP_OPENED);
+				mLayout.switchState(DoubleDraggedLayout.STATE_TOP_OPENED);
 				break;
 			case R.id.textView2:
-				mLayout.switchState(DoubleDraggedPanelLayout.STATE_NORMAL);
+				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
 				break;
 			case R.id.button2:
-				if (mLayout.getState() == DoubleDraggedPanelLayout.STATE_NORMAL) {
-					mLayout.switchState(DoubleDraggedPanelLayout.STATE_BOTTOM_OPENED);
+				if (mLayout.getState() == DoubleDraggedLayout.STATE_NORMAL) {
+					mLayout.switchState(DoubleDraggedLayout.STATE_BOTTOM_OPENED);
 				} else {
-					mLayout.switchState(DoubleDraggedPanelLayout.STATE_NORMAL);
+					mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
 				}
 				break;
 			}
