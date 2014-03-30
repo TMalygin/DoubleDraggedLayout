@@ -1,2 +1,4 @@
 DoubleDraggedLayout
 ===================
+
+This is sample!
