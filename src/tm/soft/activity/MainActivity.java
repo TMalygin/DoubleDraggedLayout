@@ -80,7 +80,7 @@ public class MainActivity extends ActionBarActivity {
 			mLayout = (DoubleDraggedLayout) rootView
 					.findViewById(R.id.layout);
 			rootView.findViewById(R.id.button1).setOnClickListener(this);
-			rootView.findViewById(R.id.textView2).setOnClickListener(this);
+			rootView.findViewById(R.id.center_layout).setOnClickListener(this);
 			rootView.findViewById(R.id.button2).setOnClickListener(this);
 			return rootView;
 		}
@@ -99,7 +99,7 @@ public class MainActivity extends ActionBarActivity {
 			case R.id.button1:
 				mLayout.switchState(DoubleDraggedLayout.STATE_TOP_OPENED);
 				break;
-			case R.id.textView2:
+			case R.id.center_layout:
 				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
 				break;
 			case R.id.button2:

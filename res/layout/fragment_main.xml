@@ -14,6 +14,8 @@
 
         <tm.soft.view.DraggedView
             android:id="@+id/button1"
+            attr:min_position_top_of_layout="-400dp"
+            attr:max_position_top_of_layout="400dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
@@ -22,7 +24,7 @@
     </RelativeLayout>
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@id/center_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/ic_launcher"
@@ -38,8 +40,8 @@
 
         <tm.soft.view.DraggedView
             android:id="@+id/button2"
-            attr:min_position="0dp"
-            attr:max_position="400dp"
+            attr:min_position_top_of_layout="0dp"
+            attr:max_position_top_of_layout="400dp"
             android:background="@android:drawable/btn_default"
             android:layout_width="60dp"
             android:layout_height="20dp"

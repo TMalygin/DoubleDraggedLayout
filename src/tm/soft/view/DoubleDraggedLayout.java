@@ -1,5 +1,6 @@
 package tm.soft.view;
 
+import tm.soft.doubledraggedlayout.R;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -33,7 +34,8 @@ public class DoubleDraggedLayout extends FrameLayout {
 	private int mSlop;
 	private float mTouchY;
 	private boolean mIsDragged = false;
-	
+
+	private DraggedView mTopDraggedView, mBottomDraggedView;
 
 	public DoubleDraggedLayout(Context context) {
 		super(context);
@@ -45,8 +47,7 @@ public class DoubleDraggedLayout extends FrameLayout {
 		init(context);
 	}
 
-	public DoubleDraggedLayout(Context context, AttributeSet attrs,
-			int defStyle) {
+	public DoubleDraggedLayout(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 		init(context);
 	}
@@ -163,10 +164,10 @@ public class DoubleDraggedLayout extends FrameLayout {
 					"DraggedPanelLayout must have 3 children!");
 		}
 
-		mTop.view = getChildAt(0);
-		mCenter.view = getChildAt(1);
-		mBottom.view = getChildAt(2);
-
+		mTop.view = findViewById(R.id.top_layout);
+		mBottom.view = findViewById(R.id.bottom_layout);
+		mCenter.view = findViewById(R.id.center_layout);
+		
 		if (changed) {
 			initTopView(left, top, right, bottom);
 			initBottomView(left, top, right, bottom);

@@ -45,10 +45,13 @@ public class DraggedView extends ImageView {
 		try {
 
 			mMaxPosition = a.getDimensionPixelSize(
-					R.styleable.DraggedView_max_position, 400);
+					R.styleable.DraggedView_max_position_top_of_layout, -1);
 			mMinPosition = a.getDimensionPixelSize(
-					R.styleable.DraggedView_max_position, 0);
-
+					R.styleable.DraggedView_min_position_top_of_layout, -1);
+			if (mMaxPosition == -1 || mMinPosition == 1) {
+				throw new IllegalStateException(
+						"DraggedView must have max_position_top_of_layout and min_position_top_of_layout!");
+			}
 		} finally {
 			a.recycle();
 		}
@@ -77,7 +80,7 @@ public class DraggedView extends ImageView {
 			float delta = event.getY() - mTouchY;
 			if (Math.abs(delta) > mSlop) {
 				mIsDragged = true;
-				
+
 			}
 			break;
 		case MotionEvent.ACTION_UP:
