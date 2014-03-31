@@ -13,8 +13,12 @@ public class DraggedView extends ImageView {
 	private int mSlop;
 	private float mTouchY;
 	private DoubleDraggedLayout mDoubleDraggedLayout;
-	private int mMinPosition;
-	private int mMaxPosition;
+	private int mNormalStateCoordinateY;
+	private int mOpenedStateCoordinateY;
+	private int mCurrentPosY;
+	private int mParentHeight = -1;
+	private boolean mIsUpper;
+
 	private boolean mIsDragged;
 
 	public DraggedView(Context context) {
@@ -40,32 +44,48 @@ public class DraggedView extends ImageView {
 			return;
 		}
 
-		TypedArray a = c.getTheme().obtainStyledAttributes(attrs,
-				R.styleable.DraggedView, 0, 0);
+		TypedArray a = c.getTheme().obtainStyledAttributes(attrs, R.styleable.DraggedView, 0, 0);
 		try {
 
-			mMaxPosition = a.getDimensionPixelSize(
-					R.styleable.DraggedView_max_position_top_of_layout, -1);
-			mMinPosition = a.getDimensionPixelSize(
-					R.styleable.DraggedView_min_position_top_of_layout, -1);
-			if (mMaxPosition == -1 || mMinPosition == 1) {
+			mOpenedStateCoordinateY = a.getDimensionPixelSize(R.styleable.DraggedView_opened_position_top_of_layout,
+					Integer.MIN_VALUE);
+			mNormalStateCoordinateY = a.getDimensionPixelSize(R.styleable.DraggedView_normal_position_top_of_layout,
+					Integer.MIN_VALUE);
+			if (mOpenedStateCoordinateY == Integer.MIN_VALUE || mNormalStateCoordinateY == Integer.MIN_VALUE) {
 				throw new IllegalStateException(
 						"DraggedView must have max_position_top_of_layout and min_position_top_of_layout!");
 			}
+
+			mIsUpper = mNormalStateCoordinateY < mOpenedStateCoordinateY;
+			mCurrentPosY = mNormalStateCoordinateY;
+			mParentHeight = a.getDimensionPixelSize(R.styleable.DraggedView_parent_layout_height, -1);
+
 		} finally {
 			a.recycle();
 		}
 	}
 
-	int getMaxPosition() {
-		return mMaxPosition;
+	int getOpenedStateCoordY() {
+		return mOpenedStateCoordinateY;
 	}
 
-	int getmMinPosition() {
-		return mMinPosition;
+	int getNormalStateCoordY() {
+		return mNormalStateCoordinateY;
 	}
 
-	public void setDoubleDraggedLayout(DoubleDraggedLayout doubleDraggedLayout) {
+	int getCurrentPosY() {
+		return mCurrentPosY;
+	}
+
+	void setCurrentPosY(int currentPosY) {
+		this.mCurrentPosY = currentPosY;
+	}
+
+	int getParentHeight() {
+		return mParentHeight;
+	}
+
+	void setDoubleDraggedLayout(DoubleDraggedLayout doubleDraggedLayout) {
 		this.mDoubleDraggedLayout = doubleDraggedLayout;
 	}
 
@@ -80,14 +100,25 @@ public class DraggedView extends ImageView {
 			float delta = event.getY() - mTouchY;
 			if (Math.abs(delta) > mSlop) {
 				mIsDragged = true;
-
+				mCurrentPosY += delta;
+				mTouchY = event.getY();
+				int bottom = mIsUpper ? mOpenedStateCoordinateY : mNormalStateCoordinateY;
+				int top = mIsUpper ? mNormalStateCoordinateY : mOpenedStateCoordinateY;
+				if (mCurrentPosY > bottom) {
+					mCurrentPosY = bottom;
+				} else if (mCurrentPosY < top) {
+					mCurrentPosY = top;
+				}
+				mDoubleDraggedLayout.requestLayout();
 			}
 			break;
 		case MotionEvent.ACTION_UP:
 			if (!mIsDragged) {
 				if (mDoubleDraggedLayout != null) {
+					int state = mIsUpper ? DoubleDraggedLayout.STATE_TOP_OPENED
+							: DoubleDraggedLayout.STATE_BOTTOM_OPENED;
 					mDoubleDraggedLayout
-							.switchState(mDoubleDraggedLayout.getState() == DoubleDraggedLayout.STATE_NORMAL ? DoubleDraggedLayout.STATE_TOP_OPENED
+							.switchState(mDoubleDraggedLayout.getState() == DoubleDraggedLayout.STATE_NORMAL ? state
 									: DoubleDraggedLayout.STATE_NORMAL);
 				}
 			}

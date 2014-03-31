@@ -8,25 +8,27 @@
 
     <RelativeLayout
         android:id="@id/top_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="166dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:background="#0f0" >
 
         <tm.soft.view.DraggedView
-            android:id="@+id/button1"
-            attr:min_position_top_of_layout="-400dp"
-            attr:max_position_top_of_layout="400dp"
-            android:layout_width="wrap_content"
+            android:id="@id/dragged_view"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            />
+            android:background="@android:drawable/btn_default"
+            attr:normal_position_top_of_layout="-322dp"
+            attr:opened_position_top_of_layout="0dp"
+            attr:parent_layout_height="384dp" />
+
     </RelativeLayout>
 
     <TextView
         android:id="@id/center_layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:background="@drawable/ic_launcher"
         android:gravity="center"
         android:text="second"
@@ -39,14 +41,14 @@
         android:background="#00f" >
 
         <tm.soft.view.DraggedView
-            android:id="@+id/button2"
-            attr:min_position_top_of_layout="0dp"
-            attr:max_position_top_of_layout="400dp"
-            android:background="@android:drawable/btn_default"
+            android:id="@id/dragged_view"
             android:layout_width="60dp"
             android:layout_height="20dp"
             android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:background="@android:drawable/btn_default"
+            attr:normal_position_top_of_layout="420dp"
+            attr:opened_position_top_of_layout="0dp" />
     </RelativeLayout>
 
 </tm.soft.view.DoubleDraggedLayout>

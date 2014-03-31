@@ -79,9 +79,9 @@ public class MainActivity extends ActionBarActivity {
 					false);
 			mLayout = (DoubleDraggedLayout) rootView
 					.findViewById(R.id.layout);
-			rootView.findViewById(R.id.button1).setOnClickListener(this);
+//			rootView.findViewById(R.id.button1).setOnClickListener(this);
 			rootView.findViewById(R.id.center_layout).setOnClickListener(this);
-			rootView.findViewById(R.id.button2).setOnClickListener(this);
+//			rootView.findViewById(R.id.button2).setOnClickListener(this);
 			return rootView;
 		}
 
@@ -95,21 +95,21 @@ public class MainActivity extends ActionBarActivity {
 
 		@Override
 		public void onClick(View v) {
-			switch (v.getId()) {
-			case R.id.button1:
-				mLayout.switchState(DoubleDraggedLayout.STATE_TOP_OPENED);
-				break;
-			case R.id.center_layout:
-				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
-				break;
-			case R.id.button2:
-				if (mLayout.getState() == DoubleDraggedLayout.STATE_NORMAL) {
-					mLayout.switchState(DoubleDraggedLayout.STATE_BOTTOM_OPENED);
-				} else {
-					mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
-				}
-				break;
-			}
+//			switch (v.getId()) {
+//			case R.id.dr:
+//				mLayout.switchState(DoubleDraggedLayout.STATE_TOP_OPENED);
+//				break;
+//			case R.id.center_layout:
+//				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
+//				break;
+//			case R.id.button2:
+//				if (mLayout.getState() == DoubleDraggedLayout.STATE_NORMAL) {
+//					mLayout.switchState(DoubleDraggedLayout.STATE_BOTTOM_OPENED);
+//				} else {
+//					mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
+//				}
+//				break;
+//			}
 		}
 	}
 

@@ -1,0 +1,7 @@
+<resources>
+   <declare-styleable name="DraggedView">
+       <attr name="normal_position_top_of_layout" format="dimension" />
+       <attr name="opened_position_top_of_layout" format="dimension" />
+       <attr name="parent_layout_height" format="dimension" />
+   </declare-styleable>
+</resources>

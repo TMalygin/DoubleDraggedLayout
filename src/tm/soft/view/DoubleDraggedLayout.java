@@ -4,6 +4,7 @@ import tm.soft.doubledraggedlayout.R;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -129,8 +130,7 @@ public class DoubleDraggedLayout extends FrameLayout {
 	 * @param toY
 	 * @param v
 	 */
-	private void startAnimation(float fromY, float toY, final View v,
-			int duration) {
+	private void startAnimation(float fromY, float toY, final View v, int duration) {
 
 		mState = STATE_ANIMATION;
 		Animation anim = new TranslateAnimation(0, 0, fromY, toY);
@@ -156,55 +156,78 @@ public class DoubleDraggedLayout extends FrameLayout {
 	}
 
 	@Override
-	protected void onLayout(boolean changed, int left, int top, int right,
-			int bottom) {
-		long startTime = System.currentTimeMillis();
+	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		if (getChildCount() != 3) {
-			throw new IllegalStateException(
-					"DraggedPanelLayout must have 3 children!");
+			throw new IllegalStateException("DraggedPanelLayout must have 3 children!");
 		}
 
-		mTop.view = findViewById(R.id.top_layout);
-		mBottom.view = findViewById(R.id.bottom_layout);
-		mCenter.view = findViewById(R.id.center_layout);
-		
-		if (changed) {
-			initTopView(left, top, right, bottom);
-			initBottomView(left, top, right, bottom);
-			initCenterView(left, top, right, bottom);
+		mTop.init(findViewById(R.id.top_layout));
+		mBottom.init(findViewById(R.id.bottom_layout));
+		mCenter.init(findViewById(R.id.center_layout));
+
+		mTop.draggedView.setDoubleDraggedLayout(this);
+		mBottom.draggedView.setDoubleDraggedLayout(this);
+		// if (changed) {
+		// initTopView(left, top, right, bottom);
+		// initBottomView(left, top, right, bottom);
+		// initCenterView(left, top, right, bottom);
+		// }
+
+		int layoutHeight = bottom - top;
+
+		int topHeight = mTop.draggedView.getParentHeight();
+		if (top <= 0) {
+			topHeight = layoutHeight;
 		}
+
+		int bottomHeight = mBottom.draggedView.getParentHeight();
+		if (bottomHeight <= 0) {
+			bottomHeight = layoutHeight;
+		}
+
+		int centerHeight = mBottom.draggedView.getNormalStateCoordY()
+				- (mTop.draggedView.getNormalStateCoordY() + topHeight);
 
 		switch (mState) {
 		case STATE_TOP_OPENED:
-			mTop.view.layout(left, mTop.normalTop + mTop.openedDiffY, right,
-					mTop.normalBottom + mTop.openedDiffY);
-			mCenter.view.layout(left, mCenter.normalTop + mTop.openedDiffY,
-					right, mCenter.normalBottom + mTop.openedDiffY);
-			mBottom.view.layout(left, mBottom.normalTop + mTop.openedDiffY,
-					right, mBottom.normalBottom + mTop.openedDiffY);
+			int topTopOpenedTop = mTop.draggedView.getOpenedStateCoordY();
+			int topTopOpenedBottom = topTopOpenedTop + topHeight;
+			int centerTopOpennedBottom = topTopOpenedBottom + centerHeight;
+
+			mTop.view.layout(left, topTopOpenedTop, right, topTopOpenedBottom);
+			mCenter.view.layout(left, topTopOpenedBottom, right, centerTopOpennedBottom);
+			mBottom.view.layout(left, centerTopOpennedBottom, right, centerTopOpennedBottom + bottomHeight);
+
 			break;
 		case STATE_BOTTOM_OPENED:
-			mTop.view.layout(left, mTop.normalTop, right, mTop.normalBottom);
-			mCenter.view.layout(left, mCenter.normalTop, right,
-					mCenter.normalBottom);
-			mBottom.view.layout(left, top, right, bottom);
+			int topBottomOpenedTop = mTop.draggedView.getNormalStateCoordY();
+			int centerBottomOpenedTop = topBottomOpenedTop + topHeight;
+			int bottomBottomOpenedTop = mBottom.draggedView.getOpenedStateCoordY();
+
+			mTop.view.layout(left, topBottomOpenedTop, right, centerBottomOpenedTop);
+			mCenter.view.layout(left, centerBottomOpenedTop, right, centerBottomOpenedTop + centerHeight);
+			mBottom.view.layout(left, bottomBottomOpenedTop, right, bottomBottomOpenedTop + bottomHeight);
+
 			break;
 		case STATE_NORMAL:
-			mTop.view.layout(left, mTop.normalTop, right, mTop.normalBottom);
-			mCenter.view.layout(left, mCenter.normalTop, right,
-					mCenter.normalBottom);
-			mBottom.view.layout(left, mBottom.normalTop, right,
-					mBottom.normalBottom);
+			int topNormalTop = mTop.draggedView.getNormalStateCoordY();
+			int topNormalBottom = topNormalTop + topHeight;
+			int bottomNormalTop = mBottom.draggedView.getNormalStateCoordY();
+
+			mTop.view.layout(left, topNormalTop, right, topNormalBottom);
+			mCenter.view.layout(left, topNormalBottom, right, bottomNormalTop);
+			mBottom.view.layout(left, bottomNormalTop, right, bottomNormalTop + bottomHeight);
+
 			break;
 		case STATE_DRAGGED:
-			mTop.view.layout(left, mTop.currentTop, right, mTop.currentBottom);
-			mCenter.view.layout(left, mCenter.currentTop, right,
-					mCenter.currentBottom);
-			mBottom.view.layout(left, mBottom.currentTop, right,
-					mBottom.currentBottom);
+			int topDraggedBottom = mTop.draggedView.getCurrentPosY() + topHeight;
+			int bottomDraggedTop = topDraggedBottom + centerHeight;
+
+			mTop.view.layout(left, mTop.draggedView.getCurrentPosY(), right, topDraggedBottom);
+			mCenter.view.layout(left, topDraggedBottom, right, bottomDraggedTop);
+			mBottom.view.layout(left, bottomDraggedTop, right, bottomDraggedTop + bottomHeight);
 			break;
 		}
-		Log.v("", "time " + (System.currentTimeMillis() - startTime));
 	}
 
 	/**
@@ -218,27 +241,31 @@ public class DoubleDraggedLayout extends FrameLayout {
 	 * @param state
 	 */
 	public void switchState(int state) {
-		if (mState == STATE_ANIMATION || mState == STATE_DRAGGED
-				|| state == mState) {
+		if (mState == STATE_ANIMATION || mState == STATE_DRAGGED || state == mState) {
 			return;
 		}
 		mNextState = state;
 		switch (state) {
 		case STATE_TOP_OPENED:
-			startAnimation(0, mTop.openedDiffY, mTop.view, 300);
-			startAnimation(0, mTop.openedDiffY, mCenter.view, 300);
-			startAnimation(0, mTop.openedDiffY, mBottom.view, 300);
+			int diffTop = mTop.draggedView.getOpenedStateCoordY() - mTop.draggedView.getNormalStateCoordY();
+			startAnimation(0, diffTop, mTop.view, 300);
+			startAnimation(0, diffTop, mCenter.view, 300);
+			startAnimation(0, diffTop, mBottom.view, 300);
 			break;
 		case STATE_BOTTOM_OPENED:
-			startAnimation(0, -mBottom.openedDiffY, mBottom.view, 300);
+			int diffBottom = mBottom.draggedView.getOpenedStateCoordY() - mBottom.draggedView.getNormalStateCoordY();
+			startAnimation(0, diffBottom, mBottom.view, 300);
 			break;
 		case STATE_NORMAL:
 			if (mState == STATE_BOTTOM_OPENED) {
-				startAnimation(0, mBottom.openedDiffY, mBottom.view, 300);
+				int diffBottomToNormal = mBottom.draggedView.getOpenedStateCoordY()
+						- mBottom.draggedView.getNormalStateCoordY();
+				startAnimation(0, -diffBottomToNormal, mBottom.view, 300);
 			} else {
-				startAnimation(0, -mTop.openedDiffY, mTop.view, 300);
-				startAnimation(0, -mTop.openedDiffY, mCenter.view, 300);
-				startAnimation(0, -mTop.openedDiffY, mBottom.view, 300);
+				int diffTopToNormal = mTop.draggedView.getNormalStateCoordY() + mTop.draggedView.getOpenedStateCoordY();
+				startAnimation(0, diffTopToNormal, mTop.view, 300);
+				startAnimation(0, diffTopToNormal, mCenter.view, 300);
+				startAnimation(0, diffTopToNormal, mBottom.view, 300);
 			}
 			break;
 		}
@@ -325,8 +352,7 @@ public class DoubleDraggedLayout extends FrameLayout {
 
 			if (velocityY > 0) {
 				mNextState = STATE_TOP_OPENED;
-				int delta = (mTop.normalBottom + mTop.openedDiffY)
-						- mTop.currentBottom;
+				int delta = (mTop.normalBottom + mTop.openedDiffY) - mTop.currentBottom;
 				int duration = Math.abs(Math.round(delta / velocityY));
 				startAnimation(0, delta, mTop.view, duration);
 				startAnimation(0, delta, mCenter.view, duration);
@@ -342,8 +368,7 @@ public class DoubleDraggedLayout extends FrameLayout {
 		} else {
 			if ((mTop.currentBottom - mTop.normalBottom) > (-mTop.normalTop / 2)) {
 				mNextState = STATE_TOP_OPENED;
-				int delta = (mTop.normalBottom + mTop.openedDiffY)
-						- mTop.currentBottom;
+				int delta = (mTop.normalBottom + mTop.openedDiffY) - mTop.currentBottom;
 
 				startAnimation(0, delta, mTop.view, 300);
 				startAnimation(0, delta, mCenter.view, 300);
@@ -391,94 +416,25 @@ public class DoubleDraggedLayout extends FrameLayout {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		// TODO: add code for Anroid API >11! This version for API 8
-		if (mState == STATE_ANIMATION) {
-			return true;
-		}
-
-		switch (event.getAction()) {
-		case MotionEvent.ACTION_DOWN:
-			startDragged(event);
-			Log.v("", "down touch event");
-			break;
-		case MotionEvent.ACTION_MOVE:
-			Log.v("", "move touch event");
-			if (mVelocityTracker == null)
-				startDragged(event);
-
-			if (Math.abs(event.getY() - mTouchY) > mSlop) {
-				if (mTouchedView == 0) {
-					startDragged(event);
-					isBeingDragged = true;
-				} else if (mTouchedView == 2) {
-					startDragged(event);
-					isBeingDragged = true;
-				}
-
-				mVelocityTracker.addMovement(event);
-				float deltaY = event.getY() - mTouchY;
-				mTouchY = event.getY();
-				if (mTouchedView == 0) {
-					draggedTopView(deltaY);
-				} else if (mTouchedView == 2) {
-					draggedBottomView(deltaY);
-				}
-			}
-			break;
-		case MotionEvent.ACTION_UP:
-			Log.v("", "up touch event");
-			if (mIsDragged && mVelocityTracker != null) {
-				mVelocityTracker.addMovement(event);
-				mVelocityTracker.computeCurrentVelocity(1);
-				float velocityY = mVelocityTracker.getYVelocity() > 0 ? 0.6f
-						: -0.6f;
-				mVelocityTracker.recycle();
-				mVelocityTracker = null;
-				if (mTouchedView == 0) {
-					finishTopDragged(velocityY);
-				} else if (mTouchedView == 2) {
-					finishBottomDragged(velocityY);
-				}
-			}
-			isBeingDragged = false;
-			mIsDragged = false;
-			mTouchedView = -1;
-
-			break;
-		}
-		return true;
+		return false;
 	}
-
-	@Override
-	public boolean onInterceptTouchEvent(MotionEvent ev) {
-		if (mState == STATE_ANIMATION) {
-			return false;
-		}
-		switch (ev.getAction()) {
-		case MotionEvent.ACTION_DOWN:
-			isBeingDragged = false;
-			mTouchY = ev.getY();
-			mTouchedView = getTouchedViewPosition(ev.getX(), mTouchY);
-			break;
-		case MotionEvent.ACTION_UP:
-			Log.v("", "up intercept touch event");
-			isBeingDragged = false;
-			break;
-		}
-		return isBeingDragged;
-	}
-
+	
 	/**
 	 * @author timofeymalygin
 	 */
 	private static class ImplViewContainer {
 		View view;
+		DraggedView draggedView;
 
 		int height;
 		int normalTop, normalBottom;
 		int currentTop, currentBottom;
 		int openedDiffY;
 
+		void init(View v) {
+			view = v;
+			draggedView = (DraggedView) v.findViewById(R.id.dragged_view);
+		}
 	}
 
 }

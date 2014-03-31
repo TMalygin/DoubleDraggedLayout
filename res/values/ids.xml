@@ -3,5 +3,6 @@
     <item name="top_layout" type="id"/>
     <item name="bottom_layout" type="id"/>
     <item name="center_layout" type="id"/>
+    <item name="dragged_view" type="id"/>
 
 </resources>
