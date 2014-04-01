@@ -4,12 +4,19 @@ import tm.soft.doubledraggedlayout.R;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.widget.ImageButton;
 
 public class DraggedView extends ImageButton {
 
 	private int mNormalStateCoordinateY;
 	private int mOpenedStateCoordinateY;
+	private DraggedListener mDraggedListener;
+
+	private float mTouchY;
+	private int mSlop;
+	private volatile boolean mDraggedStarted = false;
 
 	public DraggedView(Context context) {
 		super(context);
@@ -27,6 +34,8 @@ public class DraggedView extends ImageButton {
 	}
 
 	private void init(Context c, AttributeSet attrs) {
+		final ViewConfiguration configuration = ViewConfiguration.get(c);
+		mSlop = configuration.getScaledTouchSlop();
 
 		if (attrs == null) {
 			return;
@@ -57,51 +66,45 @@ public class DraggedView extends ImageButton {
 		return mNormalStateCoordinateY;
 	}
 
-	// @Override
-	// public boolean onTouchEvent(MotionEvent event) {
-	// super.onTouchEvent(event);
-	// switch (event.getAction()) {
-	// case MotionEvent.ACTION_DOWN:
-	// mTouchY = event.getY();
-	// break;
-	// case MotionEvent.ACTION_MOVE:
-	// float delta = event.getY() - mTouchY;
-	// if (mDoubleDraggedLayout != null) {
-	// if (mDoubleDraggedLayout.getState() ==
-	// DoubleDraggedLayout.STATE_ANIMATION) {
-	// return true;
-	// }
-	// mDoubleDraggedLayout.switchState(DoubleDraggedLayout.STATE_DRAGGED);
-	// }
-	// if (Math.abs(delta) > mSlop) {
-	// mIsDragged = true;
-	// mCurrentPosY += delta;
-	// mTouchY = event.getY();
-	// int bottom = mIsUpper ? mOpenedStateCoordinateY :
-	// mNormalStateCoordinateY;
-	// int top = mIsUpper ? mNormalStateCoordinateY : mOpenedStateCoordinateY;
-	// if (mCurrentPosY > bottom) {
-	// mCurrentPosY = bottom;
-	// } else if (mCurrentPosY < top) {
-	// mCurrentPosY = top;
-	// }
-	// mDoubleDraggedLayout.requestLayout();
-	// }
-	// break;
-	// case MotionEvent.ACTION_UP:
-	// if (!mIsDragged) {
-	// if (mDoubleDraggedLayout != null) {
-	// int state = mIsUpper ? DoubleDraggedLayout.STATE_TOP_OPENED
-	// : DoubleDraggedLayout.STATE_BOTTOM_OPENED;
-	// mDoubleDraggedLayout
-	// .switchState(mDoubleDraggedLayout.getState() ==
-	// DoubleDraggedLayout.STATE_NORMAL ? state
-	// : DoubleDraggedLayout.STATE_NORMAL);
-	// }
-	// }
-	// mIsDragged = false;
-	// break;
-	// }
-	// return true;
-	// }
+	void setDraggedListener(DraggedListener draggedListener) {
+		this.mDraggedListener = draggedListener;
+	}
+
+	boolean isTouched(int x, int y) {
+		return getLeft() <= x && getRight() >= x && getTop() <= y && getBottom() >= y;
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		super.onTouchEvent(event);
+		switch (event.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			mTouchY = event.getY();
+			break;
+		case MotionEvent.ACTION_MOVE:
+			float delta = event.getY() - mTouchY;
+			if (Math.abs(delta) > mSlop) {
+				if (mDraggedStarted) {
+					mDraggedStarted = true;
+					if (mDraggedListener != null) {
+						mDraggedListener.startDragged();
+					}
+				}
+				mTouchY = event.getY();
+				if (mDraggedListener != null) {
+					mDraggedListener.dragged(delta);
+				}
+			}
+			break;
+		case MotionEvent.ACTION_UP:
+			if (mDraggedStarted) {
+				mDraggedStarted = false;
+				if (mDraggedListener != null) {
+					mDraggedListener.stopDragged();
+				}
+			}
+			break;
+		}
+		return true;
+	}
 }
