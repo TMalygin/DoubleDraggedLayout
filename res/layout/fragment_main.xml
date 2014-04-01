@@ -9,7 +9,7 @@
     <RelativeLayout
         android:id="@id/top_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="384dp"
         android:background="#0f0" >
 
         <tm.soft.view.DraggedView
@@ -20,8 +20,7 @@
             android:layout_centerHorizontal="true"
             android:background="@android:drawable/btn_default"
             attr:normal_position_top_of_layout="-322dp"
-            attr:opened_position_top_of_layout="0dp"
-            attr:parent_layout_height="384dp" />
+            attr:opened_position_top_of_layout="0dp" />
 
     </RelativeLayout>
 
@@ -42,8 +41,8 @@
 
         <tm.soft.view.DraggedView
             android:id="@id/dragged_view"
-            android:layout_width="60dp"
-            android:layout_height="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:background="@android:drawable/btn_default"

@@ -4,7 +4,6 @@ import tm.soft.doubledraggedlayout.R;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
@@ -16,13 +15,14 @@ import android.widget.FrameLayout;
 
 public class DoubleDraggedLayout extends FrameLayout {
 
+	private static final int DURATION = 500;
 	public static final int STATE_NORMAL = 0;
 	public static final int STATE_TOP_OPENED = 1;
 	public static final int STATE_BOTTOM_OPENED = 2;
 	public static final int STATE_ANIMATION = 3;
 	public static final int STATE_DRAGGED = 4;
 
-	private int mState;
+	private volatile int mState;
 	private int mNextState;
 
 	private final ImplViewContainer mTop = new ImplViewContainer();
@@ -131,8 +131,6 @@ public class DoubleDraggedLayout extends FrameLayout {
 	 * @param v
 	 */
 	private void startAnimation(float fromY, float toY, final View v, int duration) {
-
-		mState = STATE_ANIMATION;
 		Animation anim = new TranslateAnimation(0, 0, fromY, toY);
 		anim.setDuration(duration);
 		anim.setAnimationListener(new AnimationListener() {
@@ -161,12 +159,44 @@ public class DoubleDraggedLayout extends FrameLayout {
 			throw new IllegalStateException("DraggedPanelLayout must have 3 children!");
 		}
 
-		mTop.init(findViewById(R.id.top_layout));
-		mBottom.init(findViewById(R.id.bottom_layout));
-		mCenter.init(findViewById(R.id.center_layout));
+		if (changed) {
+			mTop.init(findViewById(R.id.top_layout));
+			mBottom.init(findViewById(R.id.bottom_layout));
+			mCenter.init(findViewById(R.id.center_layout));
 
-		mTop.draggedView.setDoubleDraggedLayout(this);
-		mBottom.draggedView.setDoubleDraggedLayout(this);
+			mTop.draggedView.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+
+					switch (mState) {
+					case STATE_NORMAL:
+						Log.v("", "onClick normal");
+						switchState(STATE_TOP_OPENED);
+						break;
+					case STATE_TOP_OPENED:
+						Log.v("", "onClick opened");
+						switchState(STATE_NORMAL);
+						break;
+					}
+				}
+			});
+
+			mBottom.draggedView.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					switch (mState) {
+					case STATE_NORMAL:
+						switchState(STATE_BOTTOM_OPENED);
+						break;
+					case STATE_BOTTOM_OPENED:
+						switchState(STATE_NORMAL);
+						break;
+					}
+				}
+			});
+		}
 		// if (changed) {
 		// initTopView(left, top, right, bottom);
 		// initBottomView(left, top, right, bottom);
@@ -175,12 +205,12 @@ public class DoubleDraggedLayout extends FrameLayout {
 
 		int layoutHeight = bottom - top;
 
-		int topHeight = mTop.draggedView.getParentHeight();
-		if (top <= 0) {
+		int topHeight = mTop.view.getMeasuredHeight();
+		if (topHeight <= 0) {
 			topHeight = layoutHeight;
 		}
 
-		int bottomHeight = mBottom.draggedView.getParentHeight();
+		int bottomHeight = mBottom.view.getMeasuredHeight();
 		if (bottomHeight <= 0) {
 			bottomHeight = layoutHeight;
 		}
@@ -220,12 +250,16 @@ public class DoubleDraggedLayout extends FrameLayout {
 
 			break;
 		case STATE_DRAGGED:
-			int topDraggedBottom = mTop.draggedView.getCurrentPosY() + topHeight;
-			int bottomDraggedTop = topDraggedBottom + centerHeight;
-
-			mTop.view.layout(left, mTop.draggedView.getCurrentPosY(), right, topDraggedBottom);
-			mCenter.view.layout(left, topDraggedBottom, right, bottomDraggedTop);
-			mBottom.view.layout(left, bottomDraggedTop, right, bottomDraggedTop + bottomHeight);
+			// int topDraggedBottom = mTop.draggedView.getCurrentPosY() +
+			// topHeight;
+			// int bottomDraggedTop = topDraggedBottom + centerHeight;
+			//
+			// mTop.view.layout(left, mTop.draggedView.getCurrentPosY(), right,
+			// topDraggedBottom);
+			// mCenter.view.layout(left, topDraggedBottom, right,
+			// bottomDraggedTop);
+			// mBottom.view.layout(left, bottomDraggedTop, right,
+			// bottomDraggedTop + bottomHeight);
 			break;
 		}
 	}
@@ -244,29 +278,35 @@ public class DoubleDraggedLayout extends FrameLayout {
 		if (mState == STATE_ANIMATION || mState == STATE_DRAGGED || state == mState) {
 			return;
 		}
+		Log.v("", "state " + mState);
+		int lastState = mState;
+		mState = STATE_ANIMATION;
 		mNextState = state;
 		switch (state) {
 		case STATE_TOP_OPENED:
 			int diffTop = mTop.draggedView.getOpenedStateCoordY() - mTop.draggedView.getNormalStateCoordY();
-			startAnimation(0, diffTop, mTop.view, 300);
-			startAnimation(0, diffTop, mCenter.view, 300);
-			startAnimation(0, diffTop, mBottom.view, 300);
+			startAnimation(0, diffTop, mTop.view, DURATION);
+			startAnimation(0, diffTop, mCenter.view, DURATION);
+			startAnimation(0, diffTop, mBottom.view, DURATION);
 			break;
 		case STATE_BOTTOM_OPENED:
 			int diffBottom = mBottom.draggedView.getOpenedStateCoordY() - mBottom.draggedView.getNormalStateCoordY();
-			startAnimation(0, diffBottom, mBottom.view, 300);
+			startAnimation(0, diffBottom, mBottom.view, DURATION);
 			break;
 		case STATE_NORMAL:
-			if (mState == STATE_BOTTOM_OPENED) {
+			if (lastState == STATE_BOTTOM_OPENED) {
 				int diffBottomToNormal = mBottom.draggedView.getOpenedStateCoordY()
 						- mBottom.draggedView.getNormalStateCoordY();
-				startAnimation(0, -diffBottomToNormal, mBottom.view, 300);
+				startAnimation(0, -diffBottomToNormal, mBottom.view, DURATION);
 			} else {
 				int diffTopToNormal = mTop.draggedView.getNormalStateCoordY() + mTop.draggedView.getOpenedStateCoordY();
-				startAnimation(0, diffTopToNormal, mTop.view, 300);
-				startAnimation(0, diffTopToNormal, mCenter.view, 300);
-				startAnimation(0, diffTopToNormal, mBottom.view, 300);
+				startAnimation(0, diffTopToNormal, mTop.view, DURATION);
+				startAnimation(0, diffTopToNormal, mCenter.view, DURATION);
+				startAnimation(0, diffTopToNormal, mBottom.view, DURATION);
 			}
+			break;
+		default:
+			mState = state;
 			break;
 		}
 	}
@@ -416,9 +456,82 @@ public class DoubleDraggedLayout extends FrameLayout {
 
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
-		return false;
+		// TODO: add code for Anroid API >11! This version for API 8
+		if (mState == STATE_ANIMATION) {
+			return true;
+		}
+
+		// switch (event.getAction()) {
+		// case MotionEvent.ACTION_DOWN:
+		// startDragged(event);
+		// Log.v("", "down touch event");
+		// break;
+		// case MotionEvent.ACTION_MOVE:
+		// Log.v("", "move touch event");
+		// if (mVelocityTracker == null)
+		// startDragged(event);
+		//
+		// if (Math.abs(event.getY() - mTouchY) > mSlop) {
+		// if (mTouchedView == 0) {
+		// startDragged(event);
+		// isBeingDragged = true;
+		// } else if (mTouchedView == 2) {
+		// startDragged(event);
+		// isBeingDragged = true;
+		// }
+		//
+		// mVelocityTracker.addMovement(event);
+		// float deltaY = event.getY() - mTouchY;
+		// mTouchY = event.getY();
+		// if (mTouchedView == 0) {
+		// draggedTopView(deltaY);
+		// } else if (mTouchedView == 2) {
+		// draggedBottomView(deltaY);
+		// }
+		// }
+		// break;
+		// case MotionEvent.ACTION_UP:
+		// Log.v("", "up touch event");
+		// if (mIsDragged && mVelocityTracker != null) {
+		// mVelocityTracker.addMovement(event);
+		// mVelocityTracker.computeCurrentVelocity(1);
+		// float velocityY = mVelocityTracker.getYVelocity();
+		// mVelocityTracker.recycle();
+		// mVelocityTracker = null;
+		// if (mTouchedView == 0) {
+		// finishTopDragged(velocityY);
+		// } else if (mTouchedView == 2) {
+		// finishBottomDragged(velocityY);
+		// }
+		// }
+		// isBeingDragged = false;
+		// mIsDragged = false;
+		// mTouchedView = -1;
+		//
+		// break;
+		// }
+		return true;
 	}
-	
+
+	@Override
+	public boolean onInterceptTouchEvent(MotionEvent ev) {
+		if (mState == STATE_ANIMATION) {
+			return false;
+		}
+		switch (ev.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			isBeingDragged = false;
+			mTouchY = ev.getY();
+			mTouchedView = getTouchedViewPosition(ev.getX(), mTouchY);
+			break;
+		case MotionEvent.ACTION_UP:
+			Log.v("", "up intercept touch event");
+			isBeingDragged = false;
+			break;
+		}
+		return isBeingDragged;
+	}
+
 	/**
 	 * @author timofeymalygin
 	 */

@@ -22,14 +22,13 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_main);
 
 		if (savedInstanceState != null) {
-			placeholderFragment = (PlaceholderFragment) getSupportFragmentManager()
-					.getFragment(savedInstanceState, "first");
+			placeholderFragment = (PlaceholderFragment) getSupportFragmentManager().getFragment(savedInstanceState,
+					"first");
 		}
 
 		if (placeholderFragment == null) {
 			placeholderFragment = new PlaceholderFragment();
-			getSupportFragmentManager().beginTransaction()
-					.add(R.id.container, placeholderFragment, "first").commit();
+			getSupportFragmentManager().beginTransaction().add(R.id.container, placeholderFragment, "first").commit();
 		}
 	}
 
@@ -42,8 +41,7 @@ public class MainActivity extends ActionBarActivity {
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		getSupportFragmentManager().putFragment(outState, "first",
-				placeholderFragment);
+		getSupportFragmentManager().putFragment(outState, "first", placeholderFragment);
 	}
 
 	@Override
@@ -64,8 +62,7 @@ public class MainActivity extends ActionBarActivity {
 	/**
 	 * A placeholder fragment containing a simple view.
 	 */
-	public static class PlaceholderFragment extends Fragment implements
-			OnClickListener {
+	public static class PlaceholderFragment extends Fragment implements OnClickListener {
 
 		DoubleDraggedLayout mLayout;
 
@@ -73,20 +70,19 @@ public class MainActivity extends ActionBarActivity {
 		}
 
 		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_main, container,
-					false);
-			mLayout = (DoubleDraggedLayout) rootView
-					.findViewById(R.id.layout);
-//			rootView.findViewById(R.id.button1).setOnClickListener(this);
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+			mLayout = (DoubleDraggedLayout) rootView.findViewById(R.id.layout);
+			// rootView.findViewById(R.id.button1).setOnClickListener(this);
 			rootView.findViewById(R.id.center_layout).setOnClickListener(this);
-//			rootView.findViewById(R.id.button2).setOnClickListener(this);
+			// rootView.findViewById(R.id.button2).setOnClickListener(this);
 			return rootView;
 		}
 
 		public boolean onBackPressed() {
-			if (mLayout.getState() != DoubleDraggedLayout.STATE_NORMAL) {
+			int state = mLayout.getState();
+			if (state == DoubleDraggedLayout.STATE_TOP_OPENED
+					|| state == DoubleDraggedLayout.STATE_BOTTOM_OPENED) {
 				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
 				return true;
 			}
@@ -95,21 +91,21 @@ public class MainActivity extends ActionBarActivity {
 
 		@Override
 		public void onClick(View v) {
-//			switch (v.getId()) {
-//			case R.id.dr:
-//				mLayout.switchState(DoubleDraggedLayout.STATE_TOP_OPENED);
-//				break;
-//			case R.id.center_layout:
-//				mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
-//				break;
-//			case R.id.button2:
-//				if (mLayout.getState() == DoubleDraggedLayout.STATE_NORMAL) {
-//					mLayout.switchState(DoubleDraggedLayout.STATE_BOTTOM_OPENED);
-//				} else {
-//					mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
-//				}
-//				break;
-//			}
+			// switch (v.getId()) {
+			// case R.id.dr:
+			// mLayout.switchState(DoubleDraggedLayout.STATE_TOP_OPENED);
+			// break;
+			// case R.id.center_layout:
+			// mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
+			// break;
+			// case R.id.button2:
+			// if (mLayout.getState() == DoubleDraggedLayout.STATE_NORMAL) {
+			// mLayout.switchState(DoubleDraggedLayout.STATE_BOTTOM_OPENED);
+			// } else {
+			// mLayout.switchState(DoubleDraggedLayout.STATE_NORMAL);
+			// }
+			// break;
+			// }
 		}
 	}
 
