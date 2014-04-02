@@ -4,6 +4,7 @@ import tm.soft.doubledraggedlayout.R;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.ImageButton;
@@ -14,9 +15,9 @@ public class DraggedView extends ImageButton {
 	private int mOpenedStateCoordinateY;
 	private DraggedListener mDraggedListener;
 
-	private float mTouchY;
 	private int mSlop;
 	private volatile boolean mDraggedStarted = false;
+	private volatile float mTouchY;
 
 	public DraggedView(Context context) {
 		super(context);
@@ -77,20 +78,24 @@ public class DraggedView extends ImageButton {
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		super.onTouchEvent(event);
+		float coordY = event.getRawY();
+
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
-			mTouchY = event.getY();
+			mTouchY = coordY;
 			break;
 		case MotionEvent.ACTION_MOVE:
-			float delta = event.getY() - mTouchY;
+			float delta = coordY - mTouchY;
+
 			if (Math.abs(delta) > mSlop) {
-				if (mDraggedStarted) {
+				mTouchY = coordY;
+				if (!mDraggedStarted) {
 					mDraggedStarted = true;
 					if (mDraggedListener != null) {
 						mDraggedListener.startDragged();
 					}
 				}
-				mTouchY = event.getY();
+
 				if (mDraggedListener != null) {
 					mDraggedListener.dragged(delta);
 				}
@@ -103,6 +108,9 @@ public class DraggedView extends ImageButton {
 					mDraggedListener.stopDragged();
 				}
 			}
+			break;
+		default:
+			Log.v("", "action " + event.getAction());
 			break;
 		}
 		return true;

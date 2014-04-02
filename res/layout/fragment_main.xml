@@ -15,10 +15,10 @@
         <tm.soft.view.DraggedView
             android:id="@id/dragged_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="90dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:background="@android:drawable/btn_default"
+            android:src="@android:drawable/btn_default"
             attr:normal_position_top_of_layout="-322dp"
             attr:opened_position_top_of_layout="0dp" />
 

@@ -36,30 +36,16 @@ public class DoubleDraggedLayout extends FrameLayout {
 	private final ImplViewContainer mBottom = new ImplViewContainer();
 	private VelocityTracker mVelocityTracker;
 
-	private boolean isBeingDragged = false;
-	private int mTouchedView = -1;
-	private int mSlop;
-	private float mTouchY;
-	private boolean mIsDragged = false;
-
 	public DoubleDraggedLayout(Context context) {
 		super(context);
-		init(context);
 	}
 
 	public DoubleDraggedLayout(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		init(context);
 	}
 
 	public DoubleDraggedLayout(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
-		init(context);
-	}
-
-	private void init(Context c) {
-		final ViewConfiguration configuration = ViewConfiguration.get(c);
-		mSlop = configuration.getScaledTouchSlop();
 	}
 
 	/**
@@ -112,7 +98,6 @@ public class DoubleDraggedLayout extends FrameLayout {
 						switchState(STATE_TOP_OPENED);
 						break;
 					case STATE_TOP_OPENED:
-
 						switchState(STATE_NORMAL);
 						break;
 					}
@@ -131,6 +116,35 @@ public class DoubleDraggedLayout extends FrameLayout {
 						switchState(STATE_NORMAL);
 						break;
 					}
+				}
+			});
+
+			mTop.draggedView.setDraggedListener(new DraggedListener() {
+
+				@Override
+				public void stopDragged() {
+					Log.v("", "stopDragged");
+					finishTopDragged();
+				}
+
+				@Override
+				public void startDragged() {
+					Log.v("", "startDragged");
+					mTop.currentTop = mState == STATE_NORMAL ? mTop.draggedView.getNormalStateCoordY()
+							: mTop.draggedView.getOpenedStateCoordY();
+					mState = STATE_DRAGGED_TOP;
+				}
+
+				@Override
+				public void dragged(float delta) {
+					Log.v("", "dragged " + delta);
+					mTop.currentTop += delta;
+					if (mTop.currentTop < mTop.draggedView.getNormalStateCoordY()) {
+						mTop.currentTop = mTop.draggedView.getNormalStateCoordY();
+					} else if (mTop.currentTop > mTop.draggedView.getOpenedStateCoordY()) {
+						mTop.currentTop = mTop.draggedView.getOpenedStateCoordY();
+					}
+					requestLayout();
 				}
 			});
 		}
@@ -238,106 +252,86 @@ public class DoubleDraggedLayout extends FrameLayout {
 		}
 	}
 
-	private int getTouchedViewPosition(float x, float y) {
-		if (mState != STATE_BOTTOM_OPENED) {
+	private void finishTopDragged() {
+		int hiddenHeight = -mTop.draggedView.getNormalStateCoordY();
+		mState = STATE_ANIMATION;
+		int delta = (mTop.draggedView.getNormalStateCoordY() - mTop.currentTop);
 
-			if (mTop.draggedView.isTouched((int) x, (int) y)) {
-				return R.id.top_layout;
-			}
-		}
-		if (mBottom.draggedView.isTouched((int) x, (int) y)) {
-			return R.id.bottom_layout;
-		}
-		return R.id.center_layout;
+		mNextState = Math.abs(delta) > hiddenHeight / 2 ? STATE_TOP_OPENED : STATE_NORMAL;
+		startAnimation(0, delta, mTop.view, DURATION);
+		startAnimation(0, delta, mCenter.view, DURATION);
+		startAnimation(0, delta, mBottom.view, DURATION);
 	}
 
-	private void startDragged(MotionEvent event) {
-		if (mVelocityTracker != null)
-			mVelocityTracker.recycle();
-
-		mVelocityTracker = VelocityTracker.obtain();
-		mVelocityTracker.addMovement(event);
-		mState = STATE_DRAGGED_TOP;
-
-		mTop.currentTop = mTop.view.getTop();
-		mTop.currentBottom = mTop.view.getBottom();
-
-		mCenter.currentTop = mCenter.view.getTop();
-		mCenter.currentBottom = mCenter.view.getBottom();
-
-		mBottom.currentTop = mBottom.view.getTop();
-		mBottom.currentBottom = mBottom.view.getBottom();
-
-	}
-
-//	@Override
-//	public boolean onTouchEvent(MotionEvent event) {
-//		super.onTouchEvent(event);
-//		// TODO: add code for Anroid API >11! This version for API 8
-//		if (mState == STATE_ANIMATION) {
-//			return true;
-//		}
-//
-//		switch (event.getAction()) {
-//		case MotionEvent.ACTION_DOWN:
-//			startDragged(event);
-//			break;
-//		case MotionEvent.ACTION_MOVE:
-//			if (mTouchedView != R.id.top_layout && mTouchedView != R.id.bottom_layout) {
-//				return true;
-//			}
-//
-//			if (mVelocityTracker == null)
-//				startDragged(event);
-//
-//			float deltaY = event.getY() - mTouchY;
-//			mTouchY = event.getY();
-//
-//			if (Math.abs(deltaY) > mSlop) {
-//				mVelocityTracker.addMovement(event);
-//
-//				if (mTouchedView == R.id.top_layout) {
-//					mTop.currentTop += deltaY;
-//					requestLayout();
-//				} else if (mTouchedView == R.id.bottom_layout) {
-//				}
-//			}
-//			break;
-//		case MotionEvent.ACTION_UP:
-//			if (mIsDragged && mVelocityTracker != null) {
-//				mVelocityTracker.addMovement(event);
-//				mVelocityTracker.computeCurrentVelocity(1);
-//				float velocityY = mVelocityTracker.getYVelocity();
-//				mVelocityTracker.recycle();
-//				mVelocityTracker = null;
-//			}
-//			isBeingDragged = false;
-//			mIsDragged = false;
-//			mTouchedView = -1;
-//
-//			break;
-//		}
-//		return true;
-//	}
-//
-//	@Override
-//	public boolean onInterceptTouchEvent(MotionEvent ev) {
-//		super.onInterceptTouchEvent(ev);
-//		if (mState == STATE_ANIMATION) {
-//			return false;
-//		}
-//		switch (ev.getAction()) {
-//		case MotionEvent.ACTION_DOWN:
-//			mTouchY = ev.getY();
-//			mTouchedView = getTouchedViewPosition(ev.getX(), mTouchY);
-//			isBeingDragged = false;
-//			break;
-//		case MotionEvent.ACTION_UP:
-//			isBeingDragged = false;
-//			break;
-//		}
-//		return isBeingDragged;
-//	}
+	// @Override
+	// public boolean onTouchEvent(MotionEvent event) {
+	// super.onTouchEvent(event);
+	// // TODO: add code for Anroid API >11! This version for API 8
+	// if (mState == STATE_ANIMATION) {
+	// return true;
+	// }
+	//
+	// switch (event.getAction()) {
+	// case MotionEvent.ACTION_DOWN:
+	// startDragged(event);
+	// break;
+	// case MotionEvent.ACTION_MOVE:
+	// if (mTouchedView != R.id.top_layout && mTouchedView !=
+	// R.id.bottom_layout) {
+	// return true;
+	// }
+	//
+	// if (mVelocityTracker == null)
+	// startDragged(event);
+	//
+	// float deltaY = event.getY() - mTouchY;
+	// mTouchY = event.getY();
+	//
+	// if (Math.abs(deltaY) > mSlop) {
+	// mVelocityTracker.addMovement(event);
+	//
+	// if (mTouchedView == R.id.top_layout) {
+	// mTop.currentTop += deltaY;
+	// requestLayout();
+	// } else if (mTouchedView == R.id.bottom_layout) {
+	// }
+	// }
+	// break;
+	// case MotionEvent.ACTION_UP:
+	// if (mIsDragged && mVelocityTracker != null) {
+	// mVelocityTracker.addMovement(event);
+	// mVelocityTracker.computeCurrentVelocity(1);
+	// float velocityY = mVelocityTracker.getYVelocity();
+	// mVelocityTracker.recycle();
+	// mVelocityTracker = null;
+	// }
+	// isBeingDragged = false;
+	// mIsDragged = false;
+	// mTouchedView = -1;
+	//
+	// break;
+	// }
+	// return true;
+	// }
+	//
+	// @Override
+	// public boolean onInterceptTouchEvent(MotionEvent ev) {
+	// super.onInterceptTouchEvent(ev);
+	// if (mState == STATE_ANIMATION) {
+	// return false;
+	// }
+	// switch (ev.getAction()) {
+	// case MotionEvent.ACTION_DOWN:
+	// mTouchY = ev.getY();
+	// mTouchedView = getTouchedViewPosition(ev.getX(), mTouchY);
+	// isBeingDragged = false;
+	// break;
+	// case MotionEvent.ACTION_UP:
+	// isBeingDragged = false;
+	// break;
+	// }
+	// return isBeingDragged;
+	// }
 
 	/**
 	 * @author timofey.malygin
