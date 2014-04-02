@@ -3,6 +3,8 @@ package tm.soft.view;
 import tm.soft.doubledraggedlayout.R;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -18,6 +20,8 @@ public class DraggedView extends ImageButton {
 	private int mSlop;
 	private volatile boolean mDraggedStarted = false;
 	private volatile float mTouchY;
+	private Rect outRect = new Rect();
+	private int[] location = new int[2];
 
 	public DraggedView(Context context) {
 		super(context);
@@ -67,12 +71,22 @@ public class DraggedView extends ImageButton {
 		return mNormalStateCoordinateY;
 	}
 
+	void setDrawableState(int state) {
+		Log.v("", "state !!!");
+		Drawable drawable = getDrawable();
+		if (drawable != null)
+			drawable.setState(new int[] { state });
+	}
+
 	void setDraggedListener(DraggedListener draggedListener) {
 		this.mDraggedListener = draggedListener;
 	}
 
-	boolean isTouched(int x, int y) {
-		return getLeft() <= x && getRight() >= x && getTop() <= y && getBottom() >= y;
+	boolean isTouched(float x, float y) {
+		getDrawingRect(outRect);
+		getLocationOnScreen(location);
+		outRect.offset(location[0], location[1]);
+		return outRect.contains((int) x, (int) y);
 	}
 
 	@Override

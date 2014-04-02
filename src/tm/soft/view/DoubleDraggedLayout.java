@@ -35,17 +35,31 @@ public class DoubleDraggedLayout extends FrameLayout {
 	private final ImplViewContainer mCenter = new ImplViewContainer();
 	private final ImplViewContainer mBottom = new ImplViewContainer();
 	private VelocityTracker mVelocityTracker;
+	private float mTouchY;
+	private int mTouchedView;
+	private boolean isBeingDragged;
+	private boolean mIsDragged;
+	private float mSlop;
 
 	public DoubleDraggedLayout(Context context) {
 		super(context);
+		init(context);
 	}
 
 	public DoubleDraggedLayout(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		init(context);
 	}
 
 	public DoubleDraggedLayout(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
+		init(context);
+	}
+
+	private void init(Context c) {
+		final ViewConfiguration configuration = ViewConfiguration.get(c);
+		mSlop = configuration.getScaledTouchSlop();
+
 	}
 
 	/**
@@ -147,6 +161,33 @@ public class DoubleDraggedLayout extends FrameLayout {
 					requestLayout();
 				}
 			});
+
+			mBottom.draggedView.setDraggedListener(new DraggedListener() {
+
+				@Override
+				public void stopDragged() {
+					finishBottomDragged();
+				}
+
+				@Override
+				public void startDragged() {
+					mBottom.currentTop = mState == STATE_NORMAL ? mBottom.draggedView.getNormalStateCoordY()
+							: mBottom.draggedView.getOpenedStateCoordY();
+					mState = STATE_DRAGGED_BOTTOM;
+				}
+
+				@Override
+				public void dragged(float delta) {
+					Log.v("", "dragged " + delta);
+					mBottom.currentTop += delta;
+					if (mBottom.currentTop > mBottom.draggedView.getNormalStateCoordY()) {
+						mBottom.currentTop = mBottom.draggedView.getNormalStateCoordY();
+					} else if (mBottom.currentTop < mBottom.draggedView.getOpenedStateCoordY()) {
+						mBottom.currentTop = mBottom.draggedView.getOpenedStateCoordY();
+					}
+					requestLayout();
+				}
+			});
 		}
 
 		int layoutHeight = bottom - top;
@@ -203,6 +244,15 @@ public class DoubleDraggedLayout extends FrameLayout {
 			mCenter.view.layout(left, topDraggedBottom, right, bottomDraggedTop);
 			mBottom.view.layout(left, bottomDraggedTop, right, bottomDraggedTop + bottomHeight);
 			break;
+		case STATE_DRAGGED_BOTTOM:
+			int topDraggedBottomTop = mTop.draggedView.getNormalStateCoordY();
+			int topDraggedBottomBottom = topDraggedBottomTop + topHeight;
+			int bottomDraggedBottomTop = mBottom.draggedView.getNormalStateCoordY();
+
+			mTop.view.layout(left, topDraggedBottomTop, right, topDraggedBottomBottom);
+			mCenter.view.layout(left, topDraggedBottomBottom, right, bottomDraggedBottomTop);
+			mBottom.view.layout(left, mBottom.currentTop, right, mBottom.currentTop + bottomHeight);
+			break;
 		}
 	}
 
@@ -252,37 +302,60 @@ public class DoubleDraggedLayout extends FrameLayout {
 		}
 	}
 
-	private void finishTopDragged() {
+	/**
+	 * 
+	 */
+	void finishTopDragged() {
 		int hiddenHeight = -mTop.draggedView.getNormalStateCoordY();
 		mState = STATE_ANIMATION;
 		int delta = (mTop.draggedView.getNormalStateCoordY() - mTop.currentTop);
 
-		mNextState = Math.abs(delta) > hiddenHeight / 2 ? STATE_TOP_OPENED : STATE_NORMAL;
+		if (Math.abs(delta) > hiddenHeight / 2) {
+			mNextState = STATE_TOP_OPENED;
+			delta = (mTop.draggedView.getOpenedStateCoordY() - mTop.currentTop);
+		} else {
+			mNextState = STATE_NORMAL;
+		}
+
 		startAnimation(0, delta, mTop.view, DURATION);
 		startAnimation(0, delta, mCenter.view, DURATION);
+		startAnimation(0, delta, mBottom.view, DURATION);
+	}
+
+	void finishBottomDragged() {
+		int hiddenHeight = mBottom.draggedView.getNormalStateCoordY();
+		mState = STATE_ANIMATION;
+		int delta = (mBottom.draggedView.getNormalStateCoordY() - mBottom.currentTop);
+
+		if (Math.abs(delta) > hiddenHeight / 2) {
+			mNextState = STATE_BOTTOM_OPENED;
+			delta = (mBottom.draggedView.getOpenedStateCoordY() - mBottom.currentTop);
+		} else {
+			mNextState = STATE_NORMAL;
+		}
+
 		startAnimation(0, delta, mBottom.view, DURATION);
 	}
 
 	// @Override
 	// public boolean onTouchEvent(MotionEvent event) {
 	// super.onTouchEvent(event);
-	// // TODO: add code for Anroid API >11! This version for API 8
+	// // TODO: This version for API 8
 	// if (mState == STATE_ANIMATION) {
 	// return true;
 	// }
-	//
+
 	// switch (event.getAction()) {
 	// case MotionEvent.ACTION_DOWN:
-	// startDragged(event);
+	// // startDragged(event);
 	// break;
 	// case MotionEvent.ACTION_MOVE:
-	// if (mTouchedView != R.id.top_layout && mTouchedView !=
-	// R.id.bottom_layout) {
+	// if (isBeingDragged) {
 	// return true;
 	// }
 	//
-	// if (mVelocityTracker == null)
-	// startDragged(event);
+	// // if (mVelocityTracker == null)
+	// // startDragged(event);
 	//
 	// float deltaY = event.getY() - mTouchY;
 	// mTouchY = event.getY();
@@ -311,9 +384,30 @@ public class DoubleDraggedLayout extends FrameLayout {
 	//
 	// break;
 	// }
-	// return true;
+	// return false;
+	// }
+
+	// /**
+	// *
+	// * @param x
+	// * @param y
+	// * @return
+	// */
+	// private int getTouchedViewPosition(float x, float y) {
+	// if (mState != STATE_BOTTOM_OPENED) {
+	// if (mTop.draggedView.isTouched(x, y)) {
+	// mTop.draggedView.setDrawableState(android.R.attr.state_pressed);
+	// return R.id.top_layout;
+	// }
 	// }
 	//
+	// if (mBottom.draggedView.isTouched(x, y)) {
+	// mBottom.draggedView.setDrawableState(android.R.attr.state_pressed);
+	// return R.id.bottom_layout;
+	// }
+	// return R.id.center_layout;
+	// }
+
 	// @Override
 	// public boolean onInterceptTouchEvent(MotionEvent ev) {
 	// super.onInterceptTouchEvent(ev);
@@ -323,8 +417,10 @@ public class DoubleDraggedLayout extends FrameLayout {
 	// switch (ev.getAction()) {
 	// case MotionEvent.ACTION_DOWN:
 	// mTouchY = ev.getY();
-	// mTouchedView = getTouchedViewPosition(ev.getX(), mTouchY);
-	// isBeingDragged = false;
+	// mTouchedView = R.id.center_layout;//getTouchedViewPosition(ev.getX(),
+	// mTouchY);
+	// isBeingDragged = mTouchedView == R.id.top_layout || mTouchedView ==
+	// R.id.bottom_layout;
 	// break;
 	// case MotionEvent.ACTION_UP:
 	// isBeingDragged = false;
@@ -340,7 +436,7 @@ public class DoubleDraggedLayout extends FrameLayout {
 		View view;
 		DraggedView draggedView;
 
-		int currentTop, currentBottom;
+		int currentTop;
 
 		void init(View v) {
 			view = v;
